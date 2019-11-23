@@ -37,6 +37,7 @@ impl Word2vec {
         let topn = topn.unwrap_or(10);
         sorted.into_iter().take(topn).collect()
     }
+    
     pub fn save_vectors(&self, filename: &str) -> Result<bool, W2vError> {
         let size = self.dict.nsize();
         let mut file = try!(File::create(filename));
@@ -44,23 +45,17 @@ impl Word2vec {
 
         try!(write!(&mut meta, "{} {}\n", size, self.dim));
         try!(file.write_all(&meta));
+        let start = self.syn0.get_row_unmod(0);
         for i in 0..size {
-          let word = self.dict.get_word(i);
-            let freq = self.dict.get_entry(&word);
-            try!(file.write(&word.into_bytes()[..]));
-            let s = format!(" {}\n",freq.count);
-            try!(file.write(&s.into_bytes()[..]));
+            try!(file.write_all(&self.dict.get_word(i).into_bytes()[..]));
+            for j in 0..self.dim {
+                unsafe {
+                    let s = format!(" {}", *start.offset((i * self.dim + j) as isize));
+                    try!(file.write(&s.into_bytes()[..]));
+                }
+            }
+            try!(file.write(b"\n"));
         }
-        use std::mem;
-        use std::slice;
-        unsafe{
-            let mut file = try!(File::create(filename.to_owned()+".vec"));
-            let ptr = self.syn0.get_row_unmod(0);
-            let ptr = mem::transmute::<*const f32,*const u8>(ptr);
-            let u8data = slice::from_raw_parts(ptr,
-                                               size*self.dim*4);
-            try!(file.write(u8data));
-        };
         Ok(true)
     }
 
