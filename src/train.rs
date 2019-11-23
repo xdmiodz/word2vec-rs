@@ -119,7 +119,7 @@ pub fn train(args: &Argument) -> Result<Word2vec, W2vError> {
     let dict = Arc::new(dict);
     let mut input_mat = Matrix::new(dict.nsize(), args.dim);
     let mut output_mat = Matrix::new(dict.nsize(), args.dim);
-
+    ALL_WORDS = ATOMIC_SIZE_INIT;
     input_mat.unifrom(1.0f32 / args.dim as f32);
     output_mat.zero();
     let input = Arc::new(input_mat.make_send());
