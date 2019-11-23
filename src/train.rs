@@ -66,7 +66,7 @@ fn train_thread(dict: &Dict,
             skipgram(&mut model, &line, &mut rng, &between);
             line.clear();
             if token_count > arg.lr_update as usize {
-                let words = ALL_WORDS.fetch_add(token_count, Ordering::SeqCst) as f32;
+                let words = unsafe { ALL_WORDS.fetch_add(token_count, Ordering::SeqCst) as f32 };
                 let progress = words / all_tokens as f32;
                 model.set_lr(arg.lr * (1.0 - progress));
                 token_count = 0;
@@ -78,10 +78,10 @@ fn train_thread(dict: &Dict,
             }
         }
     }
-    ALL_WORDS.fetch_add(token_count, Ordering::SeqCst);
+    unsafe { ALL_WORDS.fetch_add(token_count, Ordering::SeqCst) };
     if tid == 0 && arg.verbose {
         loop {
-            let words = ALL_WORDS.load(Ordering::SeqCst);
+            let words = { ALL_WORDS.load(Ordering::SeqCst) };
             let progress = words as f32 / all_tokens as f32;
             print_progress(&model, progress, words as f32, &start_time);
             if words >= all_tokens {
@@ -119,7 +119,7 @@ pub fn train(args: &Argument) -> Result<Word2vec, W2vError> {
     let dict = Arc::new(dict);
     let mut input_mat = Matrix::new(dict.nsize(), args.dim);
     let mut output_mat = Matrix::new(dict.nsize(), args.dim);
-    ALL_WORDS = ATOMIC_USIZE_INIT;
+    unsafe { ALL_WORDS = ATOMIC_USIZE_INIT };
     input_mat.unifrom(1.0f32 / args.dim as f32);
     output_mat.zero();
     let input = Arc::new(input_mat.make_send());
