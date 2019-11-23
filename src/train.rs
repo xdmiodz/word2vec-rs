@@ -9,7 +9,7 @@ use rand::StdRng;
 use time::PreciseTime;
 use Word2vec;
 use W2vError;
-static ALL_WORDS: AtomicUsize = ATOMIC_USIZE_INIT;
+static mut ALL_WORDS: AtomicUsize = ATOMIC_USIZE_INIT;
 
 
 fn skipgram(model: &mut Model, line: &Vec<usize>, rng: &mut StdRng, unifrom: &Range<isize>) {
