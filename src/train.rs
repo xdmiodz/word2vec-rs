@@ -81,7 +81,7 @@ fn train_thread(dict: &Dict,
     unsafe { ALL_WORDS.fetch_add(token_count, Ordering::SeqCst) };
     if tid == 0 && arg.verbose {
         loop {
-            let words = { ALL_WORDS.load(Ordering::SeqCst) };
+            let words = unsafe { ALL_WORDS.load(Ordering::SeqCst) };
             let progress = words as f32 / all_tokens as f32;
             print_progress(&model, progress, words as f32, &start_time);
             if words >= all_tokens {
